@@ -18,14 +18,17 @@ public class CreateAccountCommandHandler : ICommandHandler<CreateAccountCommand>
     {
         await Task.Yield();
 
-        var validationResult = ValidateAccount(command);
-        if (validationResult.IsFailure)
+
+        var accountCreate = Account.Create(command.UserName);
+
+        if (!accountCreate.IsSuccess)
         {
-            return validationResult;
+            return accountCreate;
         }
 
+        var account = accountCreate.Value;
 
-        var alreadyExist = await _accountRepository.IsUsernameAlreadyExist(command.UserName, cancellationToken);
+        var alreadyExist = await _accountRepository.IsUsernameAlreadyExist(account.UserName, cancellationToken);
         if (!alreadyExist)
         {
             return Result.Failure(null);
@@ -34,26 +37,7 @@ public class CreateAccountCommandHandler : ICommandHandler<CreateAccountCommand>
         return Result.Success();
     }
 
-    private Result ValidateAccount(CreateAccountCommand command)
-    {
-        if (command.UserName is null)
-        {
-            return Result.Failure(Error.NullValue);
-        }
+    
 
-        if (!UserNameContainsExactlyThreeCapitalLetters(command.UserName))
-        {
-            return Result.Failure(AccountErrors.NotExactlyThreeCapitalLetters);
-        }
-
-        return Result.Success();
-    }
-
-    private bool UserNameContainsExactlyThreeCapitalLetters(string commandUserName)
-    {
-        var pattern = @"^(?:[^A-Z]*[A-Z]){3}[^A-Z]*$";
-        var regex = new Regex(pattern);
-
-        return regex.IsMatch(commandUserName);
-    }
+    
 }
