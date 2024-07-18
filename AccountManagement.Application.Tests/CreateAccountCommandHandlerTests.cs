@@ -5,12 +5,15 @@ namespace AccountManagement.Application.Tests
 {
     public class CreateAccountCommandHandlerTests
     {
+        private IAccountRepository _fakeAccountRepository = new FakeAccountRepository();
+
+
         [Fact]
         public async Task CreateAccount_WithNullUserLogin_ShouldReturnResultFailure()
         {
             var command = new CreateAccountCommand(null);
 
-            var sut = new CreateAccountCommandHandler();
+            var sut = new CreateAccountCommandHandler(_fakeAccountRepository);
 
             var result = await sut.Handle(command, CancellationToken.None);
 
@@ -27,7 +30,7 @@ namespace AccountManagement.Application.Tests
         {
             var command = new CreateAccountCommand(userLogin);
 
-            var sut = new CreateAccountCommandHandler();
+            var sut = new CreateAccountCommandHandler(_fakeAccountRepository);
 
             var result = await sut.Handle(command, CancellationToken.None);
 
@@ -35,19 +38,46 @@ namespace AccountManagement.Application.Tests
             Assert.Equal(AccountErrors.NotExactlyThreeCapitalLetters, result.Error);
         }
 
-        [Theory]
-        [InlineData("AAA")]
-        [InlineData("ABC")]
-        [InlineData("AXP")]
-        public async Task CreateAccount_WithLoginThatMatchThreeCapitalLetters_ShouldReturnResultSuccess(string userLogin)
+        [Fact]
+        public async Task CreateAccount_ValidUserNameAndNotAlreadyExists_ShouldReturnResultSuccess()
         {
+            var userLogin = "AEZ";
             var command = new CreateAccountCommand(userLogin);
 
-            var sut = new CreateAccountCommandHandler();
+            var sut = new CreateAccountCommandHandler(_fakeAccountRepository);
 
             var result = await sut.Handle(command, CancellationToken.None);
 
             Assert.True(result.IsSuccess);
+        }
+        
+        
+        [Fact]
+        public async Task CreateAccount_ValidUserNameAndAlreadyExists_ShouldReturnResultFailure()
+        {
+            var userLogin = "AEZ";
+            var command = new CreateAccountCommand(userLogin);
+
+            var sut = new CreateAccountCommandHandler(new FakeAccountRepository(false));
+
+            var result = await sut.Handle(command, CancellationToken.None);
+
+            Assert.False(result.IsSuccess);
+        }
+    }
+
+    public class FakeAccountRepository : IAccountRepository
+    {
+        private readonly bool _returnIsexist;
+
+        public FakeAccountRepository(bool returnIsexist = true)
+        {
+            _returnIsexist = returnIsexist;
+        }
+
+        public Task<bool> IsUsernameAlreadyExist(string username, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(_returnIsexist);
         }
     }
 }

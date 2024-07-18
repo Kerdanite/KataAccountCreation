@@ -7,6 +7,13 @@ namespace AccountManagement.Application.CreateAccount;
 
 public class CreateAccountCommandHandler : ICommandHandler<CreateAccountCommand>
 {
+    private readonly IAccountRepository _accountRepository;
+
+    public CreateAccountCommandHandler(IAccountRepository accountRepository)
+    {
+        _accountRepository = accountRepository;
+    }
+
     public async Task<Result> Handle(CreateAccountCommand command, CancellationToken cancellationToken)
     {
         await Task.Yield();
@@ -15,6 +22,13 @@ public class CreateAccountCommandHandler : ICommandHandler<CreateAccountCommand>
         if (validationResult.IsFailure)
         {
             return validationResult;
+        }
+
+
+        var alreadyExist = await _accountRepository.IsUsernameAlreadyExist(command.UserName, cancellationToken);
+        if (!alreadyExist)
+        {
+            return Result.Failure(null);
         }
 
         return Result.Success();
