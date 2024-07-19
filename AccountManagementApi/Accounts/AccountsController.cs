@@ -29,7 +29,7 @@ namespace AccountManagementApi.Accounts
                 return BadRequest(result.Error);
             }
 
-            return Created(string.Empty, null);
+            return Created(string.Empty, result.Value.UserNameCreated);
         }
     }
 }

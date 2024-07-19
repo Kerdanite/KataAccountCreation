@@ -5,7 +5,7 @@ using AccountManagement.Domain.Account;
 
 namespace AccountManagement.Application.CreateAccount;
 
-public class CreateAccountCommandHandler : ICommandHandler<CreateAccountCommand>
+public class CreateAccountCommandHandler : ICommandHandler<CreateAccountCommand, CreateAccountResponse>
 {
     private readonly IAccountRepository _accountRepository;
 
@@ -14,7 +14,7 @@ public class CreateAccountCommandHandler : ICommandHandler<CreateAccountCommand>
         _accountRepository = accountRepository;
     }
 
-    public async Task<Result> Handle(CreateAccountCommand command, CancellationToken cancellationToken)
+    public async Task<Result<CreateAccountResponse>> Handle(CreateAccountCommand command, CancellationToken cancellationToken)
     {
         await Task.Yield();
 
@@ -23,7 +23,7 @@ public class CreateAccountCommandHandler : ICommandHandler<CreateAccountCommand>
 
         if (!accountCreate.IsSuccess)
         {
-            return accountCreate;
+            return Result.Failure<CreateAccountResponse>(accountCreate.Error);
         }
 
         var account = accountCreate.Value;
@@ -31,10 +31,10 @@ public class CreateAccountCommandHandler : ICommandHandler<CreateAccountCommand>
         var alreadyExist = await _accountRepository.IsUsernameAlreadyExist(account.UserName, cancellationToken);
         if (!alreadyExist)
         {
-            return Result.Failure(null);
+            return Result.Failure<CreateAccountResponse>(null);
         }
 
-        return Result.Success();
+        return Result.Success(new CreateAccountResponse(account.UserName));
     }
 
     

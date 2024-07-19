@@ -3,4 +3,4 @@ using AccountManagement.Domain.Abstractions;
 
 namespace AccountManagement.Application.CreateAccount;
 
-public record CreateAccountCommand(string UserName) : ICommand;
+public record CreateAccountCommand(string UserName) : ICommand<CreateAccountResponse>;

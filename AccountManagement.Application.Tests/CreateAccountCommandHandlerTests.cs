@@ -39,7 +39,7 @@ namespace AccountManagement.Application.Tests
         }
 
         [Fact]
-        public async Task CreateAccount_ValidUserNameAndNotAlreadyExists_ShouldReturnResultSuccess()
+        public async Task CreateAccount_ValidUserNameAndNotAlreadyExists_ShouldReturnResultSuccessAndSameUserLoginCreated()
         {
             var userLogin = "AEZ";
             var command = new CreateAccountCommand(userLogin);
@@ -49,6 +49,7 @@ namespace AccountManagement.Application.Tests
             var result = await sut.Handle(command, CancellationToken.None);
 
             Assert.True(result.IsSuccess);
+            Assert.Equal(userLogin, result.Value.UserNameCreated);
         }
         
         
