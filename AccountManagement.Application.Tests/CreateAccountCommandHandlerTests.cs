@@ -59,7 +59,7 @@ namespace AccountManagement.Application.Tests
             var userLogin = "AEZ";
             var command = new CreateAccountCommand(userLogin);
 
-            var sut = new CreateAccountCommandHandler(new FakeAccountRepository(false));
+            var sut = new CreateAccountCommandHandler(new FakeAccountRepository(true));
 
             var result = await sut.Handle(command, CancellationToken.None);
 
@@ -69,16 +69,16 @@ namespace AccountManagement.Application.Tests
 
     public class FakeAccountRepository : IAccountRepository
     {
-        private readonly bool _returnIsexist;
+        private readonly bool _returnIsExist;
 
-        public FakeAccountRepository(bool returnIsexist = true)
+        public FakeAccountRepository(bool returnIsExist = false)
         {
-            _returnIsexist = returnIsexist;
+            _returnIsExist = returnIsExist;
         }
 
         public Task<bool> IsUsernameAlreadyExist(string username, CancellationToken cancellationToken)
         {
-            return Task.FromResult(_returnIsexist);
+            return Task.FromResult(_returnIsExist);
         }
     }
 }

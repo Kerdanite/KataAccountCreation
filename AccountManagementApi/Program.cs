@@ -1,4 +1,5 @@
 using AccountManagement.Application;
+using AccountManagement.Infrastructure;
 
 namespace AccountManagementApi
 {
@@ -14,6 +15,7 @@ namespace AccountManagementApi
             builder.Services.AddSwaggerGen();
 
             builder.Services.AddApplication();
+            builder.Services.AddInfrastructure();
 
             var app = builder.Build();
 

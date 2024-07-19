@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\AccountManagement.Application\AccountManagement.Application.csproj" />
+    <ProjectReference Include="..\AccountManagement.Infrastructure\AccountManagement.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

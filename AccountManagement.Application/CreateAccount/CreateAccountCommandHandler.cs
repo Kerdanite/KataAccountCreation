@@ -16,9 +16,6 @@ public class CreateAccountCommandHandler : ICommandHandler<CreateAccountCommand,
 
     public async Task<Result<CreateAccountResponse>> Handle(CreateAccountCommand command, CancellationToken cancellationToken)
     {
-        await Task.Yield();
-
-
         var accountCreate = Account.Create(command.UserName);
 
         if (!accountCreate.IsSuccess)
@@ -29,7 +26,7 @@ public class CreateAccountCommandHandler : ICommandHandler<CreateAccountCommand,
         var account = accountCreate.Value;
 
         var alreadyExist = await _accountRepository.IsUsernameAlreadyExist(account.UserName, cancellationToken);
-        if (!alreadyExist)
+        if (alreadyExist)
         {
             return Result.Failure<CreateAccountResponse>(null);
         }
