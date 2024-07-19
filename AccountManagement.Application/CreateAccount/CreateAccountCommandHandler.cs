@@ -31,10 +31,9 @@ public class CreateAccountCommandHandler : ICommandHandler<CreateAccountCommand,
             return Result.Failure<CreateAccountResponse>(null);
         }
 
+
+        await _accountRepository.Add(account, cancellationToken);
+
         return Result.Success(new CreateAccountResponse(account.UserName));
     }
-
-    
-
-    
 }

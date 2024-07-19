@@ -1,5 +1,5 @@
 ﻿using AccountManagement.Domain.Account;
-using AccountManagement.Infrastructure.Repositories;
+using AccountManagement.Infrastructure.InMemoryRepositories;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AccountManagement.Infrastructure;
@@ -14,6 +14,6 @@ public static class DependencyInjection
 
     private static void RegisterInMemoryRepositories(IServiceCollection services)
     {
-        services.AddScoped<IAccountRepository, AccountInMemoryRepository>();
+        services.AddSingleton<IAccountRepository, AccountInMemoryRepository>();
     }
 }

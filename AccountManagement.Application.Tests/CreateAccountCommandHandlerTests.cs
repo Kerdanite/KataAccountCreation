@@ -65,11 +65,29 @@ namespace AccountManagement.Application.Tests
 
             Assert.False(result.IsSuccess);
         }
+        
+        
+        [Fact]
+        public async Task CreateAccount_ValidUserNameAndNotAlreadyExists_ShouldAddAccountToRepository()
+        {
+            var userLogin = "AEZ";
+            var command = new CreateAccountCommand(userLogin);
+            var repository = new FakeAccountRepository(false);
+
+            var sut = new CreateAccountCommandHandler(repository);
+
+            var result = await sut.Handle(command, CancellationToken.None);
+
+            Assert.Equal(1, repository.Accounts.Count);
+            Assert.Equal(userLogin, repository.Accounts.First().UserName);
+        }
     }
 
     public class FakeAccountRepository : IAccountRepository
     {
         private readonly bool _returnIsExist;
+
+        public HashSet<Account> Accounts { get; private set; } = new();
 
         public FakeAccountRepository(bool returnIsExist = false)
         {
@@ -79,6 +97,12 @@ namespace AccountManagement.Application.Tests
         public Task<bool> IsUsernameAlreadyExist(string username, CancellationToken cancellationToken)
         {
             return Task.FromResult(_returnIsExist);
+        }
+
+        public Task Add(Account account, CancellationToken cancellationToken)
+        {
+            Accounts.Add(account);
+            return Task.CompletedTask;
         }
     }
 }
