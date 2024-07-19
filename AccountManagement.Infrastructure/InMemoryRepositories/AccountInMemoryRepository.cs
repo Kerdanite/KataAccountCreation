@@ -1,4 +1,5 @@
 ﻿using AccountManagement.Domain.Account;
+using System.Collections.Immutable;
 
 namespace AccountManagement.Infrastructure.InMemoryRepositories;
 
@@ -14,5 +15,10 @@ public class AccountInMemoryRepository : IAccountRepository
     {
         _accounts.Add(account.UserName, account);
         return Task.CompletedTask;
+    }
+
+    public Task<ImmutableHashSet<string>> GetExistingUserNames(CancellationToken cancellationToken)
+    {
+        return Task.FromResult(_accounts.Keys.ToImmutableHashSet());
     }
 }

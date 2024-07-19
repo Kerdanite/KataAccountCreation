@@ -8,10 +8,12 @@ namespace AccountManagement.Application.CreateAccount;
 public class CreateAccountCommandHandler : ICommandHandler<CreateAccountCommand, CreateAccountResponse>
 {
     private readonly IAccountRepository _accountRepository;
+    private readonly AccountService _accountService;
 
-    public CreateAccountCommandHandler(IAccountRepository accountRepository)
+    public CreateAccountCommandHandler(IAccountRepository accountRepository, AccountService accountService)
     {
         _accountRepository = accountRepository;
+        _accountService = accountService;
     }
 
     public async Task<Result<CreateAccountResponse>> Handle(CreateAccountCommand command, CancellationToken cancellationToken)
@@ -28,8 +30,9 @@ public class CreateAccountCommandHandler : ICommandHandler<CreateAccountCommand,
         var alreadyExist = await _accountRepository.IsUsernameAlreadyExist(account.UserName, cancellationToken);
         if (alreadyExist)
         {
-            return Result.Failure<CreateAccountResponse>(null);
+            account.GenerateUniqueUserName(_accountService, await _accountRepository.GetExistingUserNames(cancellationToken));
         }
+
 
 
         await _accountRepository.Add(account, cancellationToken);

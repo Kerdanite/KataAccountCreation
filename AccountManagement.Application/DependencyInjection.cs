@@ -1,4 +1,5 @@
 ﻿using AccountManagement.Application.Abstractions.Behaviors;
+using AccountManagement.Domain.Account;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AccountManagement.Application;
@@ -13,6 +14,8 @@ public static class DependencyInjection
 
             configuration.AddOpenBehavior(typeof(LoggingBehavior<,>));
         });
+
+        services.AddTransient<AccountService>();
 
         return services;
     }

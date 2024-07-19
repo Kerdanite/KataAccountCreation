@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using AccountManagement.Application.CreateAccount;
 using AccountManagement.Domain.Account;
 
@@ -13,7 +14,7 @@ namespace AccountManagement.Application.Tests
         {
             var command = new CreateAccountCommand(null);
 
-            var sut = new CreateAccountCommandHandler(_fakeAccountRepository);
+            var sut = new CreateAccountCommandHandler(_fakeAccountRepository, new AccountService());
 
             var result = await sut.Handle(command, CancellationToken.None);
 
@@ -30,7 +31,7 @@ namespace AccountManagement.Application.Tests
         {
             var command = new CreateAccountCommand(userLogin);
 
-            var sut = new CreateAccountCommandHandler(_fakeAccountRepository);
+            var sut = new CreateAccountCommandHandler(_fakeAccountRepository, new AccountService());
 
             var result = await sut.Handle(command, CancellationToken.None);
 
@@ -44,26 +45,12 @@ namespace AccountManagement.Application.Tests
             var userLogin = "AEZ";
             var command = new CreateAccountCommand(userLogin);
 
-            var sut = new CreateAccountCommandHandler(_fakeAccountRepository);
+            var sut = new CreateAccountCommandHandler(_fakeAccountRepository, new AccountService());
 
             var result = await sut.Handle(command, CancellationToken.None);
 
             Assert.True(result.IsSuccess);
             Assert.Equal(userLogin, result.Value.UserNameCreated);
-        }
-        
-        
-        [Fact]
-        public async Task CreateAccount_ValidUserNameAndAlreadyExists_ShouldReturnResultFailure()
-        {
-            var userLogin = "AEZ";
-            var command = new CreateAccountCommand(userLogin);
-
-            var sut = new CreateAccountCommandHandler(new FakeAccountRepository(true));
-
-            var result = await sut.Handle(command, CancellationToken.None);
-
-            Assert.False(result.IsSuccess);
         }
         
         
@@ -74,12 +61,29 @@ namespace AccountManagement.Application.Tests
             var command = new CreateAccountCommand(userLogin);
             var repository = new FakeAccountRepository(false);
 
-            var sut = new CreateAccountCommandHandler(repository);
+            var sut = new CreateAccountCommandHandler(repository, new AccountService());
 
             var result = await sut.Handle(command, CancellationToken.None);
 
             Assert.Equal(1, repository.Accounts.Count);
             Assert.Equal(userLogin, repository.Accounts.First().UserName);
+        }
+
+
+        [Fact]
+        public async Task CreateAccount_ValidUserNameAndAlreadyExists_ShouldReturnResultSuccessWithANewUserName()
+        {
+            var userLogin = "AEZ";
+            var command = new CreateAccountCommand(userLogin);
+            var repository = new FakeAccountRepository(true);
+            await repository.Add(Account.Create(userLogin).Value, CancellationToken.None);
+
+            var sut = new CreateAccountCommandHandler(repository, new AccountService());
+
+            var result = await sut.Handle(command, CancellationToken.None);
+
+            Assert.True(result.IsSuccess);
+            Assert.NotEqual(userLogin,result.Value.UserNameCreated);
         }
     }
 
@@ -103,6 +107,12 @@ namespace AccountManagement.Application.Tests
         {
             Accounts.Add(account);
             return Task.CompletedTask;
+        }
+
+        public async Task<ImmutableHashSet<string>> GetExistingUserNames(CancellationToken cancellationToken)
+        {
+            await Task.Yield();
+            return Accounts.Select(s => s.UserName.Value).ToImmutableHashSet();
         }
     }
 }

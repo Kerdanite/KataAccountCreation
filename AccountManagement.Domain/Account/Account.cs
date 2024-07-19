@@ -1,4 +1,5 @@
 ﻿using AccountManagement.Domain.Abstractions;
+using System.Collections.Immutable;
 using System.Text.RegularExpressions;
 
 namespace AccountManagement.Domain.Account;
@@ -26,4 +27,13 @@ public sealed class Account : Entity
     }
 
 
+    public void GenerateUniqueUserName(AccountService accountService, ImmutableHashSet<string> existingUserLogins)
+    {
+        var newUserLogin = UserName.Create(accountService.GenerateUniqueUserLogin(existingUserLogins));
+        if (newUserLogin.IsFailure)
+        {
+            throw new ApplicationException("Auto generated UserLogin does not match UserLogin rules");
+        }
+        UserName = newUserLogin.Value;
+    }
 }
