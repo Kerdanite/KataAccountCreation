@@ -27,16 +27,20 @@ public class CreateAccountCommandHandler : ICommandHandler<CreateAccountCommand,
 
         var account = accountCreate.Value;
 
-        var alreadyExist = await _accountRepository.IsUsernameAlreadyExist(account.UserName, cancellationToken);
-        if (alreadyExist)
-        {
-            account.GenerateUniqueUserName(_accountService, await _accountRepository.GetExistingUserNames(cancellationToken));
-        }
-
+        await GenerateAccountName(cancellationToken, account);
 
 
         await _accountRepository.Add(account, cancellationToken);
 
         return Result.Success(new CreateAccountResponse(account.UserName));
+    }
+
+    private async Task GenerateAccountName(CancellationToken cancellationToken, Account account)
+    {
+        var alreadyExist = await _accountRepository.IsUsernameAlreadyExist(account.UserName, cancellationToken);
+        if (alreadyExist)
+        {
+            account.GenerateUniqueUserName(_accountService, await _accountRepository.GetExistingUserNames(cancellationToken));
+        }
     }
 }

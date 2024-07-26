@@ -39,7 +39,7 @@ public record UserName
 
     private static bool UserNameContainsExactlyThreeCapitalLetters(string commandUserName)
     {
-        var pattern = @"^(?:[^A-Z]*[A-Z]){3}[^A-Z]*$";
+        var pattern = @"^[A-Z]{3}$";
         var regex = new Regex(pattern);
 
         return regex.IsMatch(commandUserName);
