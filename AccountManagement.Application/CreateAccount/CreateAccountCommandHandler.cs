@@ -2,6 +2,7 @@
 using AccountManagement.Domain.Abstractions;
 using System.Text.RegularExpressions;
 using AccountManagement.Domain.Account;
+using System.Collections.Immutable;
 
 namespace AccountManagement.Application.CreateAccount;
 
@@ -18,29 +19,45 @@ public class CreateAccountCommandHandler : ICommandHandler<CreateAccountCommand,
 
     public async Task<Result<CreateAccountResponse>> Handle(CreateAccountCommand command, CancellationToken cancellationToken)
     {
-        var accountCreate = Account.Create(command.UserName);
-
-        if (!accountCreate.IsSuccess)
+        var isAccountNameValid = ValidateAccountName(command.UserName);
+        if (!isAccountNameValid.IsSuccess)
         {
-            return Result.Failure<CreateAccountResponse>(accountCreate.Error);
+            return Result.Failure<CreateAccountResponse>(isAccountNameValid.Error);
         }
 
-        var account = accountCreate.Value;
 
-        await GenerateAccountName(cancellationToken, account);
+        var userName = await HandleUserNameUnicity(cancellationToken, isAccountNameValid.Value);
 
+        var accountCreate = Account.Create(userName);
 
-        await _accountRepository.Add(account, cancellationToken);
+        await _accountRepository.Add(accountCreate, cancellationToken);
 
-        return Result.Success(new CreateAccountResponse(account.UserName));
+        return Result.Success(new CreateAccountResponse(accountCreate.UserName));
     }
 
-    private async Task GenerateAccountName(CancellationToken cancellationToken, Account account)
+    private Result<UserName> ValidateAccountName(string userName)
     {
-        var alreadyExist = await _accountRepository.IsUsernameAlreadyExist(account.UserName, cancellationToken);
+        return UserName.Create(userName);
+    }
+
+    private async Task<UserName> HandleUserNameUnicity(CancellationToken cancellationToken, UserName userName)
+    {
+        var alreadyExist = await _accountRepository.IsUsernameAlreadyExist(userName, cancellationToken);
         if (alreadyExist)
         {
-            account.GenerateUniqueUserName(_accountService, await _accountRepository.GetExistingUserNames(cancellationToken));
+            return GenerateUniqueUserName(_accountService, await _accountRepository.GetExistingUserNames(cancellationToken));
         }
+
+        return userName;
+    }
+
+    private UserName GenerateUniqueUserName(AccountService accountService, ImmutableHashSet<string> existingUserLogins)
+    {
+        var newUserLogin = UserName.Create(accountService.GenerateUniqueUserLogin(existingUserLogins));
+        if (newUserLogin.IsFailure)
+        {
+            throw new ApplicationException("Auto generated UserLogin does not match UserLogin rules");
+        }
+        return newUserLogin.Value;
     }
 }

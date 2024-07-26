@@ -76,7 +76,7 @@ namespace AccountManagement.Application.Tests
             var userLogin = "AEZ";
             var command = new CreateAccountCommand(userLogin);
             var repository = new FakeAccountRepository(true);
-            await repository.Add(Account.Create(userLogin).Value, CancellationToken.None);
+            await repository.Add(Account.Create(UserName.Create(userLogin).Value), CancellationToken.None);
 
             var sut = new CreateAccountCommandHandler(repository, new AccountService());
 
